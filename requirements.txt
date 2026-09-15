@@ -1,1 +1,2 @@
-python-telegram-bot==20.7
+Web service ke liye `Flask` aur `gunicorn` add karein. `requirements.txt` ko isse replace karein:
+<code>python-telegram-bot==20.7
