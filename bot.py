@@ -1,4 +1,7 @@
+import os
+import threading
 import logging
+from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -8,23 +11,28 @@ from telegram.ext import (
     filters,
 )
 
-# Logging configuration
+# Logging Setup
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# Aapka Telegram Bot Token
+# Single Hardcoded Token
 BOT_TOKEN = "8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q"
 
+# Flask Server for UptimeRobot Ping
+server = Flask(__name__)
+
+@server.route('/')
+def home():
+    return "Bot is alive!", 200
+
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))
+    server.run(host="0.0.0.0", port=port)
 
 def get_id_keyboard(user_id: int):
-    """
-    Screenshot jaisa exact layout:
-    1. Pehla Blue Highlight Button -> ID copy format
-    2. Doosra Red Highlight Button -> Direct Share ID inline action
-    """
     keyboard = [
         [
             InlineKeyboardButton(
@@ -41,9 +49,7 @@ def get_id_keyboard(user_id: int):
     ]
     return InlineKeyboardMarkup(keyboard)
 
-
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Har user ke liye unki apni personal ID dikhayega"""
     user_id = update.effective_user.id
     message_text = f"👤 <b>Your ID :</b> <code>{user_id}</code>"
     reply_markup = get_id_keyboard(user_id)
@@ -54,19 +60,14 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-
 async def handle_user_or_forward(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Forwarded message, shared contact, ya direct user profile share handle karne ke liye"""
     msg = update.message
     target_id = None
 
-    # Forward kiye gaye message se ID nikalne ke liye
     if msg.forward_from:
         target_id = msg.forward_from.id
-    # Share kiye gaye contact se ID nikalne ke liye
     elif msg.contact:
         target_id = msg.contact.user_id
-    # Direct message bhejne wale user ki ID
     else:
         target_id = update.effective_user.id
 
@@ -80,18 +81,18 @@ async def handle_user_or_forward(update: Update, context: ContextTypes.DEFAULT_T
             reply_markup=reply_markup
         )
 
-
 def main():
-    # Multi-user Async Application build
+    # Keep-alive Flask Web Server Thread
+    threading.Thread(target=run_flask, daemon=True).start()
+
+    # Telegram Bot Application Setup
     app = Application.builder().token(BOT_TOKEN).build()
 
-    # Handlers Registration
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, handle_user_or_forward))
 
-    logger.info("Bot is running...")
+    logger.info("Bot starting with web service...")
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()
