@@ -1,4 +1,5 @@
 import os
+import asyncio
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -14,11 +15,10 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# Token from Environment Variable or Direct Fallback
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 def get_user_name(user):
-    return user.first_name if user and user.first_name else "User"
+    return user.first_name if user.first_name else "User"
 
 # /start Command Handler
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -82,13 +82,13 @@ async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = f"""┌──────────────────────────────┐
 │ 🆔 <b>IDENTITY CARD</b>
 └──────────────────────────────┘
-👤 <b>User Name:</b> {get_user_name(user)}
+👤 <b>User Name:</b> {user.first_name}
 🆔 <b>User ID:</b> <code>{user.id}</code>
 💬 <b>Chat ID:</b> <code>{chat.id}</code>"""
     
     if update.message:
         await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query and update.callback_query.message:
+    elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
 # /about Command Handler
@@ -103,7 +103,7 @@ async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if update.message:
         await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query and update.callback_query.message:
+    elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
 # /commands Command Handler
@@ -121,7 +121,7 @@ async def commands_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if update.message:
         await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query and update.callback_query.message:
+    elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
 # /status Command Handler
@@ -136,7 +136,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if update.message:
         await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query and update.callback_query.message:
+    elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
 # /premium Command Handler
@@ -150,7 +150,7 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if update.message:
         await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query and update.callback_query.message:
+    elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
 # /support Command Handler
@@ -164,36 +164,33 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if update.message:
         await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query and update.callback_query.message:
+    elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
 # Buttons Callback Handler
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    if query:
-        await query.answer()
+    await query.answer()
 
-        handlers = {
-            "cmd_id": id_command,
-            "cmd_about": about_command,
-            "cmd_commands": commands_command,
-            "cmd_status": status_command,
-            "cmd_premium": premium_command,
-            "cmd_support": support_command
-        }
+    handlers = {
+        "cmd_id": id_command,
+        "cmd_about": about_command,
+        "cmd_commands": commands_command,
+        "cmd_status": status_command,
+        "cmd_premium": premium_command,
+        "cmd_support": support_command
+    }
 
-        if query.data in handlers:
-            await handlers[query.data](update, context)
+    if query.data in handlers:
+        await handlers[query.data](update, context)
 
-def main():
+async def main():
     if not BOT_TOKEN:
-        logging.error("BOT_TOKEN missing!")
-        return
+        raise ValueError("BOT_TOKEN environment variable is missing on Render!")
 
-    # Application Build
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Handlers Setup
+    # Handlers Registration
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("id", id_command))
     app.add_handler(CommandHandler("about", about_command))
@@ -203,8 +200,16 @@ def main():
     app.add_handler(CommandHandler("support", support_command))
     app.add_handler(CallbackQueryHandler(button_click))
 
-    logging.info("KUSHALWEBS Bot Engine active!")
-    app.run_polling(drop_pending_updates=True)
+    print("KUSHALWEBS Bot Engine running successfully!")
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling(drop_pending_updates=True)
+    
+    # Keeping the bot running
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        pass
