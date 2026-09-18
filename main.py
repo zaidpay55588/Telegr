@@ -28,7 +28,6 @@ def home():
     return "Bot is Alive 24/7!"
 
 def run_flask():
-    # Render default PORT environment variable use karega
     port = int(os.environ.get("PORT", 8080))
     app_web.run(host='0.0.0.0', port=port)
 
@@ -37,46 +36,48 @@ def keep_alive():
     t.daemon = True
     t.start()
 
-# --- TELEGRAM BOT HANDLERS ---
+# --- HELPER FUNCTIONS ---
 def get_user_name(user):
     raw_name = user.first_name if user.first_name else "User"
     return html.escape(raw_name)
 
+# --- TELEGRAM BOT HANDLERS ---
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     name = get_user_name(user)
 
     start_text = (
-        f"👑 <b>JOY WEBS</b> 👑\n"
+        f"👑 <b>JOY WEBS DASHBOARD</b> 👑\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
         f"✨ Hello, <b>{name}</b>!\n\n"
-        f"✅ You are now <b>verified</b>.\n"
-        f"💎 Premium access <b>unlocked</b>.\n"
-        f"🔥 Enjoy the full experience!\n"
+        f"✅ Status: <b>VERIFIED</b> 🟢\n"
+        f"💎 Tier: <b>ULTIMATE PREMIUM</b>\n"
+        f"🔥 Access: <b>UNLIMITED</b>\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"⚙️ <b>Quick Access</b>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🆔 /id — GET YOUR CHAT ID\n"
-        f"ℹ️ /about — ABOUT THIS BOT\n"
-        f"⚙️ /commands — FULL COMMAND LIST\n"
-        f"🛡️ /status — BOT STATUS\n"
-        f"🎁 /premium — PREMIUM INFO\n"
-        f"💖 /support — CONTACT OWNER\n\n"
-        f"✨ <i>Tap a button below to begin</i> 👇"
+        f"⚙️ <b>Select an option below to proceed:</b>"
     )
 
+    # Dynamic Styled Button Grid (Mimicking Colored Accent Layout)
     keyboard = [
         [
-            InlineKeyboardButton("🆔 MY ID", callback_data="cmd_id"),
-            InlineKeyboardButton("ℹ️ ABOUT", callback_data="cmd_about"),
+            # Green Top Highlight Button
+            InlineKeyboardButton("🤝 🔥 Buy Premium Access [TRENDING] 🟢", callback_data="cmd_premium")
         ],
         [
-            InlineKeyboardButton("⚙️ COMMANDS", callback_data="cmd_commands"),
-            InlineKeyboardButton("🛡️ STATUS", callback_data="cmd_status"),
+            # Primary Action Buttons
+            InlineKeyboardButton("🆔 MY ID 👤", callback_data="cmd_id"),
+            InlineKeyboardButton("ℹ️ ABOUT 🌐", callback_data="cmd_about"),
         ],
         [
-            InlineKeyboardButton("📣 CHANNEL", url="https://t.me/your_channel"),
-            InlineKeyboardButton("👑 OWNER", url="https://t.me/your_username"),
+            InlineKeyboardButton("⚙️ COMMANDS 📜", callback_data="cmd_commands"),
+            InlineKeyboardButton("🛡️ STATUS 🟢", callback_data="cmd_status"),
+        ],
+        [
+            InlineKeyboardButton("💖 SUPPORT CENTER 🎧", callback_data="cmd_support"),
+        ],
+        [
+            # Bottom Red Accent Link Button
+            InlineKeyboardButton("📢 🌟 Telegram Channel 🚀", url="https://t.me/RAHU_LKING89"),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -111,7 +112,7 @@ async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🌐 <b>Project:</b> JOY WEBS Bot Engine\n"
         f"⚡ <b>Version:</b> v3.0 Pro\n"
         f"🔒 <b>Security:</b> End-to-End Encrypted\n"
-        f"👑 <b>Developer:</b> @your_username"
+        f"👑 <b>Developer:</b> @RAHU_LKING89"
     )
     if update.message:
         await update.message.reply_text(msg, parse_mode="HTML")
@@ -148,6 +149,45 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
+async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = (
+        f"🎁 <b>PREMIUM MEMBERSHIP</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"💎 <b>Plan:</b> VIP Lifetime Unlocked\n"
+        f"🔥 <b>Features:</b> Unlimited Speed\n"
+        f"🌟 <b>Status:</b> ACTIVE ✅"
+    )
+    if update.message:
+        await update.message.reply_text(msg, parse_mode="HTML")
+    elif update.callback_query:
+        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
+
+async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = (
+        f"━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"      💖 <b>ꜱᴜᴘᴘᴏʀᴛ ᴄᴇɴᴛᴇʀ</b> 💖\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"✨ Need help? We're here for you!\n\n"
+        f"┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n"
+        f"👑 Owner: @RAHU_LKING89\n"
+        f"📣 Channel: @RAHU_LKING89\n"
+        f"┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n\n"
+        f"⭐ Expect a reply within 24 hours."
+    )
+    
+    keyboard = [
+        [
+            InlineKeyboardButton("👑 OWNER", url="https://t.me/RAHU_LKING89"),
+            InlineKeyboardButton("📣 CHANNEL", url="https://t.me/RAHU_LKING89")
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    if update.message:
+        await update.message.reply_text(msg, parse_mode="HTML", reply_markup=reply_markup, disable_web_page_preview=True)
+    elif update.callback_query:
+        await update.callback_query.message.reply_text(msg, parse_mode="HTML", reply_markup=reply_markup, disable_web_page_preview=True)
+
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -157,6 +197,8 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "cmd_about": about_command,
         "cmd_commands": commands_command,
         "cmd_status": status_command,
+        "cmd_premium": premium_command,
+        "cmd_support": support_command,
     }
 
     if query.data in handlers:
@@ -170,6 +212,8 @@ async def start_bot():
     app.add_handler(CommandHandler("about", about_command))
     app.add_handler(CommandHandler("commands", commands_command))
     app.add_handler(CommandHandler("status", status_command))
+    app.add_handler(CommandHandler("premium", premium_command))
+    app.add_handler(CommandHandler("support", support_command))
     app.add_handler(CallbackQueryHandler(button_click))
 
     print("JOY WEBS Bot Engine running successfully!")
@@ -181,10 +225,8 @@ async def start_bot():
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    # Web server start
     keep_alive()
     
-    # Telegram Bot start
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
