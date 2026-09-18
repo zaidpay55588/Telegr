@@ -8,7 +8,6 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
-    CallbackQueryHandler,
     ContextTypes,
 )
 
@@ -19,6 +18,7 @@ logging.basicConfig(
 )
 
 BOT_TOKEN = "8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q"
+OWNER_LINK = "https://t.me/RAHU_LKING89"
 
 # --- FLASK WEB SERVER FOR UPTIMEROBOT ---
 app_web = Flask('')
@@ -36,157 +36,82 @@ def keep_alive():
     t.daemon = True
     t.start()
 
-# --- HELPER FUNCTION ---
-def get_user_name(user):
-    return html.escape(user.first_name if user.first_name else "User")
-
 # --- TELEGRAM BOT HANDLERS ---
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    name = get_user_name(user)
+    chat = update.effective_chat
+    name = html.escape(user.first_name if user.first_name else "User")
 
-    start_text = (
-        f"<tg-emoji emoji-id='5368324170671202286'>👑</tg-emoji> <b>JOY WEBS</b> <tg-emoji emoji-id='5368324170671202286'>👑</tg-emoji>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>✨</tg-emoji> Hello, <b>{name}</b>!\n\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>✅</tg-emoji> Status: <b>VERIFIED</b>\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>💎</tg-emoji> Access: <b>UNLOCKED</b>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>⚙️</tg-emoji> Select an option below:"
-    )
+    welcome_text = f"Welcome, <b>{name}</b>!"
 
     keyboard = [
         [
-            InlineKeyboardButton("🆔 MY ID", callback_data="cmd_id"),
-            InlineKeyboardButton("ℹ️ ABOUT", callback_data="cmd_about"),
-        ],
-        [
-            InlineKeyboardButton("⚙️ COMMANDS", callback_data="cmd_commands"),
-            InlineKeyboardButton("🛡️ STATUS", callback_data="cmd_status"),
-        ],
-        [
-            InlineKeyboardButton("💖 SUPPORT", callback_data="cmd_support"),
+            InlineKeyboardButton("👑 Contact Owner", url=OWNER_LINK)
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    if update.message:
+    try:
+        # User profile photos/videos fetch karna
+        photos = await context.bot.get_user_profile_photos(user_id=user.id, limit=1)
+        if photos.total_count > 0:
+            file_id = photos.photos[0][-1].file_id
+            await context.bot.send_photo(
+                chat_id=chat.id,
+                photo=file_id,
+                caption=welcome_text,
+                parse_mode="HTML",
+                reply_markup=reply_markup
+            )
+        else:
+            await update.message.reply_text(
+                welcome_text,
+                parse_mode="HTML",
+                reply_markup=reply_markup
+            )
+    except Exception:
         await update.message.reply_text(
-            start_text,
+            welcome_text,
             parse_mode="HTML",
-            reply_markup=reply_markup,
-            disable_web_page_preview=True
+            reply_markup=reply_markup
         )
 
+# Direct Chat ID Command (Only ID output)
 async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
     chat = update.effective_chat
-    
-    msg = (
-        f"<tg-emoji emoji-id='5368324170671202286'>🆔</tg-emoji> <b>IDENTITY DETAILS</b>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>👤</tg-emoji> <b>Name:</b> {get_user_name(user)}\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>🆔</tg-emoji> <b>User ID:</b> <code>{user.id}</code>\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>💬</tg-emoji> <b>Chat ID:</b> <code>{chat.id}</code>"
-    )
-    
     if update.message:
-        await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query:
-        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
+        await update.message.reply_text(f"<code>{chat.id}</code>", parse_mode="HTML")
 
-async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = (
-        f"<tg-emoji emoji-id='5368324170671202286'>ℹ️</tg-emoji> <b>SYSTEM INFORMATION</b>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>🌐</tg-emoji> <b>Project:</b> JOY WEBS\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>👑</tg-emoji> <b>Owner:</b> @RAHU_LKING89"
+# Help Command
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    help_text = (
+        "<b>Help Menu</b>\n\n"
+        "• /start — Start Bot\n"
+        "• /id — Get Chat ID\n"
+        "• /help — Get Support Info"
     )
-    if update.message:
-        await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query:
-        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
-
-async def commands_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = (
-        f"<tg-emoji emoji-id='5368324170671202286'>⚙️</tg-emoji> <b>COMMANDS LIST</b>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>🔹</tg-emoji> /start — Start Bot\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>🔹</tg-emoji> /id — Check ID\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>🔹</tg-emoji> /about — About System\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>🔹</tg-emoji> /commands — Command List\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>🔹</tg-emoji> /status — Bot Status\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>🔹</tg-emoji> /support — Contact Support"
-    )
-    if update.message:
-        await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query:
-        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
-
-async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = (
-        f"<tg-emoji emoji-id='5368324170671202286'>🛡️</tg-emoji> <b>SYSTEM STATUS</b>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>✅</tg-emoji> <b>Engine:</b> ONLINE\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>🟢</tg-emoji> <b>Status:</b> ACTIVE"
-    )
-    if update.message:
-        await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query:
-        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
-
-async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = (
-        f"━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"      <tg-emoji emoji-id='5368324170671202286'>💖</tg-emoji> <b>SUPPORT CENTER</b> <tg-emoji emoji-id='5368324170671202286'>💖</tg-emoji>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>✨</tg-emoji> Need help? We're here for you!\n\n"
-        f"┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>👑</tg-emoji> Owner: @RAHU_LKING89\n"
-        f"<tg-emoji emoji-id='5368324170671202286'>📣</tg-emoji> Channel: @RAHU_LKING89\n"
-        f"┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
-    )
-    
-    keyboard = [
-        [
-            InlineKeyboardButton("👑 OWNER", url="https://t.me/RAHU_LKING89"),
-            InlineKeyboardButton("📣 CHANNEL", url="https://t.me/RAHU_LKING89")
-        ]
-    ]
+    keyboard = [[InlineKeyboardButton("👑 Contact Owner", url=OWNER_LINK)]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-
+    
     if update.message:
-        await update.message.reply_text(msg, parse_mode="HTML", reply_markup=reply_markup, disable_web_page_preview=True)
-    elif update.callback_query:
-        await update.callback_query.message.reply_text(msg, parse_mode="HTML", reply_markup=reply_markup, disable_web_page_preview=True)
+        await update.message.reply_text(help_text, parse_mode="HTML", reply_markup=reply_markup)
 
-async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    handlers = {
-        "cmd_id": id_command,
-        "cmd_about": about_command,
-        "cmd_commands": commands_command,
-        "cmd_status": status_command,
-        "cmd_support": support_command,
-    }
-
-    if query.data in handlers:
-        await handlers[query.data](update, context)
+async def post_init(application):
+    # Telegram Side Menu Commands Set Karna
+    commands = [
+        ("id", "Get Chat ID"),
+        ("help", "Help & Support")
+    ]
+    await application.bot.set_my_commands(commands)
 
 async def start_bot():
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
 
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("id", id_command))
-    app.add_handler(CommandHandler("about", about_command))
-    app.add_handler(CommandHandler("commands", commands_command))
-    app.add_handler(CommandHandler("status", status_command))
-    app.add_handler(CommandHandler("support", support_command))
-    app.add_handler(CallbackQueryHandler(button_click))
+    app.add_handler(CommandHandler("help", help_command))
 
-    print("JOY WEBS Bot Engine Running...")
+    print("Simple Bot Engine Running...")
     
     await app.initialize()
     await app.start()
