@@ -36,23 +36,42 @@ def keep_alive():
     t.daemon = True
     t.start()
 
+# --- HELPER FUNCTION FOR USER DATA ---
+def get_user_details(user, chat):
+    first_name = html.escape(user.first_name) if user.first_name else "N/A"
+    last_name = html.escape(user.last_name) if user.last_name else ""
+    full_name = f"{first_name} {last_name}".strip()
+    username = f"@{user.username}" if user.username else "N/A"
+    
+    return full_name, username, chat.id
+
 # --- TELEGRAM BOT HANDLERS ---
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
-    name = html.escape(user.first_name if user.first_name else "User")
+    
+    full_name, username, chat_id = get_user_details(user, chat)
 
-    welcome_text = f"Welcome, <b>{name}</b>!"
+    welcome_text = (
+        f"𝙃𝙚𝙮 {full_name} 𝙬𝙚𝙡𝙘𝙤𝙢𝙚 𝙆𝙪𝙨𝙝𝙖𝙡 𝙙𝙖𝙩𝙖\n\n"
+        f"𝙗𝙤𝙩 𝙪𝙨𝙚𝙙 𝙛𝙤𝙧 𝙘𝙝𝙖𝙩 𝙄𝘿 𝙖𝙣𝙮 𝙥𝙧𝙤𝙗𝙡𝙚𝙢 𝙘𝙤𝙣𝙩𝙖𝙘𝙩 𝙖𝙙𝙢𝙞𝙣 𝙩𝙝𝙖𝙣𝙠𝙨\n\n"
+        f"𝙛𝙤𝙧 𝙨𝙪𝙥𝙥𝙤𝙧𝙩\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 <b>NAME:</b> {full_name}\n"
+        f"🌐 <b>USERNAME:</b> {username}\n"
+        f"🆔 <b>CHAT ID:</b> <code>{chat_id}</code>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━"
+    )
 
+    # VIP Styled Buttons Layout
     keyboard = [
         [
-            InlineKeyboardButton("👑 Contact Owner", url=OWNER_LINK)
+            InlineKeyboardButton(" 𝘾𝙊𝙉𝙏𝘼𝘾𝙏 𝘼𝘿𝙈𝙄𝙉 ", url=OWNER_LINK)
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
-        # User profile photos/videos fetch karna
         photos = await context.bot.get_user_profile_photos(user_id=user.id, limit=1)
         if photos.total_count > 0:
             file_id = photos.photos[0][-1].file_id
@@ -76,31 +95,18 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=reply_markup
         )
 
-# Direct Chat ID Command (Only ID output)
+# Direct Chat ID Command
 async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
     if update.message:
         await update.message.reply_text(f"<code>{chat.id}</code>", parse_mode="HTML")
 
-# Help Command
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    help_text = (
-        "<b>Help Menu</b>\n\n"
-        "• /start — Start Bot\n"
-        "• /id — Get Chat ID\n"
-        "• /help — Get Support Info"
-    )
-    keyboard = [[InlineKeyboardButton("👑 Contact Owner", url=OWNER_LINK)]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    if update.message:
-        await update.message.reply_text(help_text, parse_mode="HTML", reply_markup=reply_markup)
-
 async def post_init(application):
-    # Telegram Side Menu Commands Set Karna
+    await application.bot.delete_my_commands()
+    
     commands = [
-        ("id", "Get Chat ID"),
-        ("help", "Help & Support")
+        ("start", "Start Bot"),
+        ("id", "Get Chat ID")
     ]
     await application.bot.set_my_commands(commands)
 
@@ -109,12 +115,12 @@ async def start_bot():
 
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("id", id_command))
-    app.add_handler(CommandHandler("help", help_command))
 
-    print("Simple Bot Engine Running...")
+    print("Kushal Data VIP Bot Engine Running...")
     
     await app.initialize()
     await app.start()
+    
     await app.updater.start_polling(drop_pending_updates=True)
     
     await asyncio.Event().wait()
