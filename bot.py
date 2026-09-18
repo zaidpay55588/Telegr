@@ -189,7 +189,7 @@ def main():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN environment variable is missing on Render!")
 
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app = ApplicationBuilder().token(8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q).build()
 
     # Handlers Registration
     app.add_handler(CommandHandler("start", start_command))
