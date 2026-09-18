@@ -1,120 +1,163 @@
 import os
-import threading
 import logging
-from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
-    MessageHandler,
+    CallbackQueryHandler,
     ContextTypes,
-    filters,
 )
 
-# Logging Configuration
+# Logging Setup
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-logger = logging.getLogger(__name__)
 
-# Telegram Bot Token
-BOT_TOKEN = "8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q"
+BOT_TOKEN = os.getenv("8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q")
 
-# Flask Server (For UptimeRobot 24/7 Hosting)
-server = Flask(__name__)
+# /start Command Handler
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    first_name = user.first_name if user.first_name else "User"
 
-@server.route('/')
-def home():
-    return "Bot is active 24/7!", 200
+    start_text = f"""━━━━━━━━━━━━━━━━━━━━━━━
+      👑  <b>KUSHALWEBS</b>  👑
+━━━━━━━━━━━━━━━━━━━━━━━
 
-def run_flask():
-    port = int(os.environ.get("PORT", 8080))
-    server.run(host="0.0.0.0", port=port)
+✨ Hello, <b>{first_name}</b>!
 
-def get_id_keyboard(user_id: int):
-    """
-    Screenshot jaisa Button Design:
-    - 1st Button (Blue UI Tint): ID Copy button format
-    - 2nd Button (Red UI Tint): Direct Share ID inline action
-    """
+✅ You are now <b>verified</b>.
+💎 Premium access <b>unlocked</b>.
+🔥 Enjoy the full experience!
+
+┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+⚙️ <b>Quick Access</b>
+┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  🆔 /id       — ɢᴇᴛ ʏᴏᴜʀ ᴄʜᴀᴛ ɪᴅ
+  ℹ️ /about    — ᴀʙᴏᴜᴛ ᴛʜɪꜱ ʙᴏᴛ
+  ⚙️ /commands — ꜰᴜʟʟ ᴄᴏᴍᴍᴀɴᴅ ʟɪꜱᴛ
+  🛡️ /status   — ʙᴏᴛ ꜱᴛᴀᴛᴜꜱ
+  🎁 /premium  — ᴘʀᴇᴍɪᴜᴍ ɪɴꜰᴏ
+  💖 /support  — ᴄᴏɴᴛᴀᴄᴛ ᴏᴡɴᴇʀ
+
+✨ Tap a button below to begin 👇"""
+
+    # Inline Keyboard Layout
     keyboard = [
         [
-            InlineKeyboardButton(
-                text=f"📋 {user_id}",
-                callback_data=f"copy_{user_id}"
-            )
+            InlineKeyboardButton("🆔 MY ID", callback_data="cmd_id"),
+            InlineKeyboardButton("ℹ️ ABOUT", callback_data="cmd_about"),
         ],
         [
-            InlineKeyboardButton(
-                text="Share ID",
-                switch_inline_query=f"{user_id}"
-            )
+            InlineKeyboardButton("⚙️ COMMANDS", callback_data="cmd_commands"),
+            InlineKeyboardButton("🛡️ STATUS", callback_data="cmd_status"),
+        ],
+        [
+            InlineKeyboardButton("📣 CHANNEL", url="https://t.me/your_channel"),  # Apne channel ka link daalein
+            InlineKeyboardButton("👑 OWNER", url="https://t.me/your_username"),   # Apne username ka link daalein
         ]
     ]
-    return InlineKeyboardMarkup(keyboard)
-
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Jab bhi koi user /start bhejega:
-    Bot USI USER ki khud ki Personal Telegram ID generate karega.
-    """
-    user_id = update.effective_user.id
-    
-    # Exact Text Format: 👤 Your ID : <user_id>
-    message_text = f"👤 <b>Your ID :</b> <code>{user_id}</code>"
-    reply_markup = get_id_keyboard(user_id)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
-        text=message_text,
+        start_text,
         parse_mode="HTML",
-        reply_markup=reply_markup
+        reply_markup=reply_markup,
+        disable_web_page_preview=True
     )
 
-async def handle_user_or_forward(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Jab user kisi doosre user ka message/contact forward karega:
-    Exact Format: ✅ User ID : <target_id>
-    """
-    msg = update.message
-    if not msg:
-        return
+# /id Command
+async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+    msg = f"🆔 <b>Your User ID:</b> <code>{user_id}</code>\n💬 <b>Chat ID:</b> <code>{chat_id}</code>"
+    
+    if update.message:
+        await update.message.reply_text(msg, parse_mode="HTML")
+    elif update.callback_query:
+        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-    target_id = None
+# /about Command
+async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = "ℹ️ <b>About KUSHALWEBS Bot</b>\n\nThis bot provides premium services and features for users."
+    if update.message:
+        await update.message.reply_text(msg, parse_mode="HTML")
+    elif update.callback_query:
+        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-    # Forwarded Message
-    if msg.forward_from:
-        target_id = msg.forward_from.id
-    # Shared Contact
-    elif msg.contact:
-        target_id = msg.contact.user_id
-    # Normal Message (Sender's ID)
-    else:
-        target_id = update.effective_user.id
+# /commands Command
+async def commands_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = """⚙️ <b>Available Commands:</b>
 
-    if target_id:
-        message_text = f"✅ <b>User ID :</b> <code>{target_id}</code>"
-        reply_markup = get_id_keyboard(target_id)
+/start - Restart the bot
+/id - Get your User & Chat ID
+/about - About this bot
+/commands - List all commands
+/status - Check bot status
+/premium - Premium membership details
+/support - Contact bot owner"""
+    if update.message:
+        await update.message.reply_text(msg, parse_mode="HTML")
+    elif update.callback_query:
+        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-        await msg.reply_text(
-            text=message_text,
-            parse_mode="HTML",
-            reply_markup=reply_markup
-        )
+# /status Command
+async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = "🛡️ <b>Bot Status:</b> Operational & Running smoothly! ✅"
+    if update.message:
+        await update.message.reply_text(msg, parse_mode="HTML")
+    elif update.callback_query:
+        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
+
+# /premium Command
+async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = "🎁 <b>Premium Status:</b> Unlocked! You have full access to all features. 💎"
+    if update.message:
+        await update.message.reply_text(msg, parse_mode="HTML")
+    elif update.callback_query:
+        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
+
+# /support Command
+async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = "💖 <b>Support:</b> Contact owner for help: @your_username"
+    if update.message:
+        await update.message.reply_text(msg, parse_mode="HTML")
+    elif update.callback_query:
+        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
+
+# Button Click Handler
+async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == "cmd_id":
+        await id_command(update, context)
+    elif query.data == "cmd_about":
+        await about_command(update, context)
+    elif query.data == "cmd_commands":
+        await commands_command(update, context)
+    elif query.data == "cmd_status":
+        await status_command(update, context)
 
 def main():
-    # Flask Web Server Parallel Thread
-    threading.Thread(target=run_flask, daemon=True).start()
+    if not BOT_TOKEN:
+        raise ValueError("BOT_TOKEN environment variable is not set!")
 
-    # Application Setup
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # Handlers Registration
     app.add_handler(CommandHandler("start", start_command))
-    app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, handle_user_or_forward))
+    app.add_handler(CommandHandler("id", id_command))
+    app.add_handler(CommandHandler("about", about_command))
+    app.add_handler(CommandHandler("commands", commands_command))
+    app.add_handler(CommandHandler("status", status_command))
+    app.add_handler(CommandHandler("premium", premium_command))
+    app.add_handler(CommandHandler("support", support_command))
+    app.add_handler(CallbackQueryHandler(button_click))
 
-    logger.info("Bot started and ready for users...")
-    app.run_polling(drop_pending_updates=True)
+    print("Bot is running...")
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
