@@ -1,5 +1,3 @@
-import os
-import asyncio
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -15,12 +13,13 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+# Direct Telegram Token Added
+BOT_TOKEN = "8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q"
 
 def get_user_name(user):
     return user.first_name if user.first_name else "User"
 
-# /start Command Handler
+# /start Command
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     name = get_user_name(user)
@@ -75,7 +74,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             disable_web_page_preview=True
         )
 
-# /id Command Handler
+# /id Command
 async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
@@ -91,7 +90,7 @@ async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /about Command Handler
+# /about Command
 async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = """┌──────────────────────────────┐
 │ ℹ️ <b>SYSTEM INFORMATION</b>
@@ -106,7 +105,7 @@ async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /commands Command Handler
+# /commands Command
 async def commands_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = """┌──────────────────────────────┐
 │ ⚙️ <b>COMMAND DIRECTORY</b>
@@ -124,7 +123,7 @@ async def commands_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /status Command Handler
+# /status Command
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = """┌──────────────────────────────┐
 │ 🛡️ <b>SYSTEM DIAGNOSTICS</b>
@@ -139,7 +138,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /premium Command Handler
+# /premium Command
 async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = """┌──────────────────────────────┐
 │ 🎁 <b>PREMIUM MEMBERSHIP</b>
@@ -153,7 +152,7 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /support Command Handler
+# /support Command
 async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = """┌──────────────────────────────┐
 │ 💖 <b>SUPPORT & CONTACT</b>
@@ -167,7 +166,7 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# Buttons Callback Handler
+# Button Click Router
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -184,10 +183,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data in handlers:
         await handlers[query.data](update, context)
 
-async def main():
-    if not BOT_TOKEN:
-        raise ValueError("BOT_TOKEN environment variable is missing on Render!")
-
+def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # Handlers Registration
@@ -201,15 +197,7 @@ async def main():
     app.add_handler(CallbackQueryHandler(button_click))
 
     print("KUSHALWEBS Bot Engine running successfully!")
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling(drop_pending_updates=True)
-    
-    # Keeping the bot running
-    await asyncio.Event().wait()
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        pass
+    main()
