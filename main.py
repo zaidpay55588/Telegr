@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
@@ -13,7 +14,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# Direct Telegram Token Added
+# Telegram Bot Token
 BOT_TOKEN = "8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q"
 
 def get_user_name(user):
@@ -183,7 +184,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data in handlers:
         await handlers[query.data](update, context)
 
-def main():
+async def start_bot():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # Handlers Registration
@@ -197,7 +198,20 @@ def main():
     app.add_handler(CallbackQueryHandler(button_click))
 
     print("KUSHALWEBS Bot Engine running successfully!")
-    app.run_polling(drop_pending_updates=True)
+    
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling(drop_pending_updates=True)
+    
+    # Event loop to keep bot running
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    main()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(start_bot())
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    finally:
+        loop.close()
