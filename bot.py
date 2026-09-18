@@ -14,8 +14,8 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# SIRF EK BOT TOKEN (Direct Added)
-BOT_TOKEN = "8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q"
+# Token from Environment Variable or Direct Fallback
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q")
 
 def get_user_name(user):
     return user.first_name if user and user.first_name else "User"
@@ -185,15 +185,15 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if query.data in handlers:
             await handlers[query.data](update, context)
 
-# SINGLE MAIN FUNCTION
 def main():
     if not BOT_TOKEN:
         logging.error("BOT_TOKEN missing!")
         return
 
+    # Application Build
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Handlers Registration
+    # Handlers Setup
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("id", id_command))
     app.add_handler(CommandHandler("about", about_command))
@@ -203,8 +203,8 @@ def main():
     app.add_handler(CommandHandler("support", support_command))
     app.add_handler(CallbackQueryHandler(button_click))
 
-    print("KUSHALWEBS Bot Engine running successfully!")
-    app.run_polling()
+    logging.info("KUSHALWEBS Bot Engine active!")
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
