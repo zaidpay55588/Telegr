@@ -14,10 +14,9 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# Token setup directly from Environment Variable (Render compatible)
+# SIRF EK SINGLE BOT TOKEN SYSTEM (No multiple tokens)
 BOT_TOKEN = os.getenv("8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q")
 
-# Helper to construct stylish response header
 def get_user_name(user):
     return user.first_name if user.first_name else "User"
 
@@ -48,19 +47,18 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 👇 <b>Select an option below to proceed:</b>"""
 
-    # Telegram Bot API 9.4+ style color attributes included
     keyboard = [
         [
-            InlineKeyboardButton("🆔 MY ID", callback_data="cmd_id", style="primary"),
-            InlineKeyboardButton("ℹ️ ABOUT", callback_data="cmd_about", style="primary"),
+            InlineKeyboardButton("🆔 MY ID", callback_data="cmd_id"),
+            InlineKeyboardButton("ℹ️ ABOUT", callback_data="cmd_about"),
         ],
         [
-            InlineKeyboardButton("⚙️ COMMANDS", callback_data="cmd_commands", style="primary"),
-            InlineKeyboardButton("🛡️ STATUS", callback_data="cmd_status", style="success"),
+            InlineKeyboardButton("⚙️ COMMANDS", callback_data="cmd_commands"),
+            InlineKeyboardButton("🛡️ STATUS", callback_data="cmd_status"),
         ],
         [
-            InlineKeyboardButton("🎁 PREMIUM", callback_data="cmd_premium", style="primary"),
-            InlineKeyboardButton("💖 SUPPORT", callback_data="cmd_support", style="danger"),
+            InlineKeyboardButton("🎁 PREMIUM", callback_data="cmd_premium"),
+            InlineKeyboardButton("💖 SUPPORT", callback_data="cmd_support"),
         ],
         [
             InlineKeyboardButton("📡 OFFICIAL CHANNEL", url="https://t.me/your_channel"),
@@ -77,7 +75,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             disable_web_page_preview=True
         )
 
-# /id Command
+# /id Command Handler
 async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
@@ -93,7 +91,7 @@ async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /about Command
+# /about Command Handler
 async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = """┌──────────────────────────────┐
 │ ℹ️ <b>SYSTEM INFORMATION</b>
@@ -108,7 +106,7 @@ async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /commands Command
+# /commands Command Handler
 async def commands_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = """┌──────────────────────────────┐
 │ ⚙️ <b>COMMAND DIRECTORY</b>
@@ -126,7 +124,7 @@ async def commands_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /status Command
+# /status Command Handler
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = """┌──────────────────────────────┐
 │ 🛡️ <b>SYSTEM DIAGNOSTICS</b>
@@ -141,7 +139,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /premium Command
+# /premium Command Handler
 async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = """┌──────────────────────────────┐
 │ 🎁 <b>PREMIUM MEMBERSHIP</b>
@@ -155,7 +153,7 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /support Command
+# /support Command Handler
 async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = """┌──────────────────────────────┐
 │ 💖 <b>SUPPORT & CONTACT</b>
@@ -169,7 +167,7 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# Button Click Router
+# Buttons Callback Handler
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -186,13 +184,14 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data in handlers:
         await handlers[query.data](update, context)
 
+# SIRF EK HI SINGLE MAIN FUNCTION
 def main():
     if not BOT_TOKEN:
-        raise ValueError("BOT_TOKEN environment variable is not set!")
+        raise ValueError("BOT_TOKEN environment variable is missing on Render!")
 
-    app = ApplicationBuilder().token(8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q).build()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Registering handlers
+    # Handlers Registration
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("id", id_command))
     app.add_handler(CommandHandler("about", about_command))
