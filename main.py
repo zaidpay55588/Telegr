@@ -1,5 +1,9 @@
+import os
 import logging
 import asyncio
+import html
+from flask import Flask
+from threading import Thread
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
@@ -14,38 +18,52 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# Telegram Bot Token
 BOT_TOKEN = "8017205070:AAFgbCv6bPfLb-CWCelBW2_S50NYDOIAh2Q"
 
-def get_user_name(user):
-    return user.first_name if user.first_name else "User"
+# --- FLASK WEB SERVER FOR UPTIMEROBOT ---
+app_web = Flask('')
 
-# /start Command
+@app_web.route('/')
+def home():
+    return "Bot is Alive 24/7!"
+
+def run_flask():
+    # Render default PORT environment variable use karega
+    port = int(os.environ.get("PORT", 8080))
+    app_web.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run_flask)
+    t.daemon = True
+    t.start()
+
+# --- TELEGRAM BOT HANDLERS ---
+def get_user_name(user):
+    raw_name = user.first_name if user.first_name else "User"
+    return html.escape(raw_name)
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     name = get_user_name(user)
 
-    start_text = f"""╔══════════════════════════════╗
-   ⚡ <b>K U S H A L  W E B S</b> ⚡
-╚══════════════════════════════╝
-
-👋 <i>Greetings,</i> <b>{name}</b>!
-
-🟢 <b>ACCOUNT STATUS:</b> <code>VERIFIED</code>
-💎 <b>TIER:</b> <code>ULTIMATE PREMIUM</code>
-✨ <b>ACCESS:</b> <code>UNLIMITED</code>
-
-┌──────────────────────────────┐
-│ 🌐 <b>NAVIGATION & MENU</b>       
-└──────────────────────────────┘
-├ 🆔 /id       — <code>Check User/Chat ID</code>
-├ ℹ️ /about    — <code>System Info & Overview</code>
-├ ⚙️ /commands — <code>All Commands Directory</code>
-├ 🛡️ /status   — <code>Live System Diagnostics</code>
-├ 🎁 /premium  — <code>Membership Privilege</code>
-└ 💖 /support  — <code>Contact Developer</code>
-
-👇 <b>Select an option below to proceed:</b>"""
+    start_text = (
+        f"👑 <b>JOY WEBS</b> 👑\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"✨ Hello, <b>{name}</b>!\n\n"
+        f"✅ You are now <b>verified</b>.\n"
+        f"💎 Premium access <b>unlocked</b>.\n"
+        f"🔥 Enjoy the full experience!\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"⚙️ <b>Quick Access</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"🆔 /id — GET YOUR CHAT ID\n"
+        f"ℹ️ /about — ABOUT THIS BOT\n"
+        f"⚙️ /commands — FULL COMMAND LIST\n"
+        f"🛡️ /status — BOT STATUS\n"
+        f"🎁 /premium — PREMIUM INFO\n"
+        f"💖 /support — CONTACT OWNER\n\n"
+        f"✨ <i>Tap a button below to begin</i> 👇"
+    )
 
     keyboard = [
         [
@@ -57,11 +75,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton("🛡️ STATUS", callback_data="cmd_status"),
         ],
         [
-            InlineKeyboardButton("🎁 PREMIUM", callback_data="cmd_premium"),
-            InlineKeyboardButton("💖 SUPPORT", callback_data="cmd_support"),
-        ],
-        [
-            InlineKeyboardButton("📡 OFFICIAL CHANNEL", url="https://t.me/your_channel"),
+            InlineKeyboardButton("📣 CHANNEL", url="https://t.me/your_channel"),
             InlineKeyboardButton("👑 OWNER", url="https://t.me/your_username"),
         ]
     ]
@@ -75,99 +89,65 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             disable_web_page_preview=True
         )
 
-# /id Command
 async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
-    msg = f"""┌──────────────────────────────┐
-│ 🆔 <b>IDENTITY CARD</b>
-└──────────────────────────────┘
-👤 <b>User Name:</b> {user.first_name}
-🆔 <b>User ID:</b> <code>{user.id}</code>
-💬 <b>Chat ID:</b> <code>{chat.id}</code>"""
-    
+    msg = (
+        f"🆔 <b>IDENTITY DETAILS</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 <b>Name:</b> {get_user_name(user)}\n"
+        f"🆔 <b>User ID:</b> <code>{user.id}</code>\n"
+        f"💬 <b>Chat ID:</b> <code>{chat.id}</code>"
+    )
     if update.message:
         await update.message.reply_text(msg, parse_mode="HTML")
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /about Command
 async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = """┌──────────────────────────────┐
-│ ℹ️ <b>SYSTEM INFORMATION</b>
-└──────────────────────────────┘
-🌐 <b>Project:</b> KUSHALWEBS Bot Engine
-⚡ <b>Version:</b> v3.0 Pro
-🔒 <b>Security:</b> End-to-End Encrypted
-👑 <b>Developer:</b> @your_username"""
-    
+    msg = (
+        f"ℹ️ <b>SYSTEM INFORMATION</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"🌐 <b>Project:</b> JOY WEBS Bot Engine\n"
+        f"⚡ <b>Version:</b> v3.0 Pro\n"
+        f"🔒 <b>Security:</b> End-to-End Encrypted\n"
+        f"👑 <b>Developer:</b> @your_username"
+    )
     if update.message:
         await update.message.reply_text(msg, parse_mode="HTML")
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /commands Command
 async def commands_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = """┌──────────────────────────────┐
-│ ⚙️ <b>COMMAND DIRECTORY</b>
-└──────────────────────────────┘
-🔹 /start — Launch / Refresh Dashboard
-🔹 /id — Get unique User ID & Chat ID
-🔹 /about — View system information
-🔹 /commands — View command directory
-🔹 /status — Check live system ping
-🔹 /premium — Check premium privileges
-🔹 /support — Contact support desk"""
-    
+    msg = (
+        f"⚙️ <b>COMMAND DIRECTORY</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"🔹 /start — Launch Dashboard\n"
+        f"🔹 /id — Get User & Chat ID\n"
+        f"🔹 /about — System Info\n"
+        f"🔹 /commands — Command Directory\n"
+        f"🔹 /status — System Status\n"
+        f"🔹 /premium — Premium Info\n"
+        f"🔹 /support — Contact Support"
+    )
     if update.message:
         await update.message.reply_text(msg, parse_mode="HTML")
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /status Command
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = """┌──────────────────────────────┐
-│ 🛡️ <b>SYSTEM DIAGNOSTICS</b>
-└──────────────────────────────┘
-✅ <b>Core Engine:</b> ONLINE
-🟢 <b>Database:</b> CONNECTED
-⚡ <b>Response Speed:</b> ULTRA FAST
-🛡️ <b>Protection:</b> ACTIVE"""
-    
+    msg = (
+        f"🛡️ <b>SYSTEM DIAGNOSTICS</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"✅ <b>Engine:</b> ONLINE\n"
+        f"🟢 <b>Database:</b> CONNECTED\n"
+        f"⚡ <b>Speed:</b> ULTRA FAST"
+    )
     if update.message:
         await update.message.reply_text(msg, parse_mode="HTML")
     elif update.callback_query:
         await update.callback_query.message.reply_text(msg, parse_mode="HTML")
 
-# /premium Command
-async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = """┌──────────────────────────────┐
-│ 🎁 <b>PREMIUM MEMBERSHIP</b>
-└──────────────────────────────┘
-💎 <b>Plan:</b> VIP Lifetime Unlocked
-🔥 <b>Features:</b> Unlimited Speed & Priority Access
-🌟 <b>Status:</b> ACTIVE ✅"""
-    
-    if update.message:
-        await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query:
-        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
-
-# /support Command
-async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = """┌──────────────────────────────┐
-│ 💖 <b>SUPPORT & CONTACT</b>
-└──────────────────────────────┘
-📩 Need help or custom setups?
-👨‍💻 <b>Owner Handle:</b> @your_username
-📢 <b>Updates Channel:</b> https://t.me/your_channel"""
-    
-    if update.message:
-        await update.message.reply_text(msg, parse_mode="HTML")
-    elif update.callback_query:
-        await update.callback_query.message.reply_text(msg, parse_mode="HTML")
-
-# Button Click Router
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -177,8 +157,6 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "cmd_about": about_command,
         "cmd_commands": commands_command,
         "cmd_status": status_command,
-        "cmd_premium": premium_command,
-        "cmd_support": support_command
     }
 
     if query.data in handlers:
@@ -187,26 +165,26 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start_bot():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Handlers Registration
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("id", id_command))
     app.add_handler(CommandHandler("about", about_command))
     app.add_handler(CommandHandler("commands", commands_command))
     app.add_handler(CommandHandler("status", status_command))
-    app.add_handler(CommandHandler("premium", premium_command))
-    app.add_handler(CommandHandler("support", support_command))
     app.add_handler(CallbackQueryHandler(button_click))
 
-    print("KUSHALWEBS Bot Engine running successfully!")
+    print("JOY WEBS Bot Engine running successfully!")
     
     await app.initialize()
     await app.start()
     await app.updater.start_polling(drop_pending_updates=True)
     
-    # Event loop to keep bot running
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
+    # Web server start
+    keep_alive()
+    
+    # Telegram Bot start
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
